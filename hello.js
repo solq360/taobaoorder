@@ -1,13 +1,12 @@
 (function(){
 var debugFlag = false;
 var urlRoot = "https:";
-var url = 'https://code.jquery.com/jquery-1.12.3.min.js';
-
+var url = "https://code.jquery.com/jquery-1.12.3.min.js";
+var filterUrl = "https://buyertrade.taobao.com/trade/itemlist/asyncBought.htm?action=itemlist/BoughtQueryAction&event_submit_do_query=1&_input_charset=utf8";
 window.embed_script = embed_script;
-
+window.register_aop = register_aop;
 //执行主程序
 embed_script(url,Main);
-
 
 function Main(){
 	if(typeof(jQuery)  ==  'undefined'){
@@ -34,13 +33,23 @@ function Main(){
 	var lastPageOwner = ".pagination-item:last";
 	
  	//var nextInputDom = $$(nextInputOwner);
-	var lastPageDom = $$(lastPageOwner);
+	//var lastPageDom = $$(lastPageOwner);	
+	var pageCount = parseInt($$(lastPageOwner).text());
+	//拦截XHR
+	register_aop(filterUrl,true,doHandle);		
 	
-	var pageCount = parseInt(lastPageDom.text());
- 	var body = "";
-	var count = 0;
+	/*
+	for(var i = 1 ;i<= pageCount; i++){
+		$$(nextInputOwner)[0].value=i;
+		$$(nextBntOwner).click();
+		doHandle();
+	}*/
 	
-	var tableDom = $$(tableOwner);
+	
+	function doHandle(){		
+ 		var body = "",
+			count = 0;
+		var tableDom = $$(tableOwner);
 		tableDom.each(function(i,dom){
 			
 			var rowDom = $$(dom);
@@ -83,18 +92,20 @@ function Main(){
 			});
 			
 		});//end dom for	
- 	
-	$$(nextInputOwner)[0].value=1;
-	$$(nextBntOwner).click();
-	/*
-		for(var i=1;i<=13;i++){
-		$$(nextInputOwner)[0].value=i;
-		$$(nextBntOwner).click();		
-		}//end for
-	*/ 
-	console.log(body);
-	console.log("count",count,lastPageDom.text());	
+		console.log(body);		
+		console.log("count",count);	
+		/*
+		 	var nextPage = parseInt($$(nextInputOwner)[0].value) + 1;
+			if(nextPage > pageCount){
+				return;
+			}
+			$$(nextInputOwner)[0] = nextPage;
+			$$(nextBntOwner).click();
+		*/
+	}
+	
 }
+
 
 /**
 格式化csv数据
@@ -122,7 +133,15 @@ var AOP_DATA = {
 	after : {},
 	before : {}
 };
+window.AOP_DATA = AOP_DATA;
 
+function register_aop(url,flag,cb){
+	if(flag){
+		AOP_DATA.after[url]=cb;
+	}else{
+		AOP_DATA.before[url]=cb;
+	}
+}
 /**
 重写 XMLHttpRequest http 进行拦截
 */
@@ -132,6 +151,7 @@ if(typeof(XMLHttpRequest.prototype.aopXHR) == "undefined"){
 	XMLHttpRequest.prototype.open = function(method,url,asncFlag,user,password) { 
 		var beforeCb = AOP_DATA.before[url];
 		var afterCb = AOP_DATA.after[url];
+
 		if(beforeCb!=null || afterCb != null){			
 			var cb = this.onreadystatechange;
 			this.onreadystatechange = function(){
