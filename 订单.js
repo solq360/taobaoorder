@@ -20,16 +20,10 @@ function Main(){
 		window.$$=$$;
 	}
  	
-	var pageCount = 32;
-	//拦截XHR
+ 	//拦截XHR
 	register_aop(filterUrl,true,doHandle);		
 	doHandle();
  
-	for(var i = 1 ;i<= pageCount; i++){
- 		//$$(".pagination-next")[0].click();
-		//doHandle();
-	} 
-	
  
 	function doHandle(){		
  		var body = "",
@@ -51,9 +45,12 @@ function Main(){
 				return;
 			}	 
 			
+			var img = rowDom.find(".ml-mod__media___3iQpG a img").prop("outerHTML").replace('src="//','src="http://');
+			var href = titleDoms.attr("href").replace(/^\/\//,"http://");
 			count++;
 				body+=formatCsv([
-					titleDoms.attr("href"),
+					img,
+					href,
 					title,
 				]);
 			 
@@ -62,7 +59,9 @@ function Main(){
 		});//end dom for	
 		console.log(body);		
 		//console.log("count",count);	
-	 
+		setTimeout(function(){
+		$$(".button-mod__button___2JAs3")[1].click();
+		},500);
 	}
 	
 }
